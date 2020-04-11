@@ -1,0 +1,156 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<iostream>
+#define MAXSTRLEN 173
+#define OK 1
+#define ERROR 0
+#define OVERFLOW 0
+using namespace std;
+typedef char HString[MAXSTRLEN+1];
+typedef int status;
+int next[MAXSTRLEN];
+char *chars;
+
+
+typedef struct{
+	char *ch;
+	int length;
+}data;
+char* ToString(char array[], int array_size)//字符数组转换成字符串，输出头指针
+{
+    char *p;
+    int i;
+
+    p = (char*)malloc(array_size+1);
+
+    for(i=0;i<array_size;i++)
+    {
+        *(p+i) ='0'+ array[i];
+    }
+
+    *(p+i)='\0';
+	return p;
+
+}
+status StrAssign(data &T,char *chars)//生成一个其值等于串常量chars的串T,赋予内部数据长度
+{
+	int i;
+	int j;
+	char *c;
+	for(i=0,c=chars;*c!='\0';i++,c++);
+	if(!i)
+	{
+		T.ch=NULL;
+		T.length=0;
+	}
+	else
+	{
+		if(!(T.ch=(char*)malloc(i*sizeof(char))))
+			exit(OVERFLOW);
+		for(j=0;j<i;j++)
+		{
+			T.ch[j]=chars[j];
+		}
+		T.length=i;
+	}
+	return OK;
+}
+void get_next(data T,int next[])//求next值（前缀数组）
+{
+	int j=1,k=0;
+	next[1]=0;
+	while(j<T.length)
+	{
+		if(k==0||T.ch[k-1]==T.ch[j-1])
+		{
+			j++;
+			k++;
+			next[j]=k;
+		}
+		else
+            k=next[k];
+	}
+}
+
+
+
+int kmp(data S,data T,int pos)//匹配算法kmp
+{
+
+	int i=pos,j=1;
+	while(i!=S.length+1&&j!=T.length+1)
+	{
+		if(j==0||S.ch[i-1]==T.ch[j-1])
+		{
+			j++;i++;
+		}
+		else
+			j=next[j];
+	}
+	if(j>T.length-1)
+		return (i-T.length);
+	else
+		return 0;
+}
+
+void find(data keys)//查找单词
+{
+	status StrAssign(data &T,char *chars);
+
+	int count=0;
+	data T;
+	HString text;
+	int i=1,j=0;
+	FILE *fp;
+	if(!(fp=fopen("1.txt","r")))
+	{
+		printf("Open file error!\n");
+		exit(0);
+	}
+	get_next(keys,next);
+	while(!feof(fp))
+	{
+		fgets(text,MAXSTRLEN,fp);
+		ToString(text, sizeof(text)/sizeof(text[0]));
+		chars=text;
+		StrAssign(T,chars);
+		j=kmp(T,keys,j+1);
+		if(j!=0)
+		{
+			cout<<"行="<<i<<",列="<<j<<endl;
+			count++;
+		}
+		while(j!=0)
+		{
+			j=kmp(T,keys,j+1);
+			if(j!=0)
+			{
+				cout<<"行="<<i<<",列="<<j<<endl;
+				count++;
+
+			}
+		}
+		i++;
+	}
+	cout<<"总个数:"<<count<<endl;
+}
+int main()
+{
+	data S;
+	char words[20];
+	int n,i;
+	printf("输入你想查询的词汇个数：\n");
+	scanf("%d",&n);
+	printf("输入你想查询的词汇\n");
+	for(i=0;i<n;i++)
+	{
+		cin>>words;
+		ToString(words, sizeof(words)/sizeof(words[0]));
+		chars=words;
+		cout<<"数据："<<chars<<endl;
+		StrAssign(S,chars);
+		find(S);
+	}
+	return 0;
+
+}
